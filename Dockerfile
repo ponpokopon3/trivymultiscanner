@@ -1,36 +1,43 @@
 # syntax=docker/dockerfile:1
-FROM python:3.11-slim
+FROM --platform=$BUILDPLATFORM python:3.11-slim
 
-# バージョンは必要に応じて変更可
 ARG TRIVY_VERSION=0.65.0
+# BuildKit が自動で埋める（例: TARGETOS=linux, TARGETARCH=amd64/arm64）
+ARG TARGETOS
+ARG TARGETARCH
 
-# 基本ツールと（必要なら）nodejs/npm を導入
+# 基本ツール
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl ca-certificates gnupg unzip \
-    nodejs npm \
  && rm -rf /var/lib/apt/lists/*
 
-# Trivy バイナリ導入（公式リリースのLinux 64bit）
-RUN curl -fsSL -o /tmp/trivy.tgz \
-      "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" \
- && tar -xzf /tmp/trivy.tgz -C /usr/local/bin trivy \
- && rm /tmp/trivy.tgz
+# Trivy バイナリ導入（アーキに応じて取得）
+# amd64 → Linux-64bit, arm64 → Linux-ARM64
+RUN set -eux; \
+    case "${TARGETARCH}" in \
+      amd64)  TRIVY_ARCH="64bit" ;; \
+      arm64)  TRIVY_ARCH="ARM64" ;; \
+      *) echo "Unsupported arch: ${TARGETARCH}"; exit 1 ;; \
+    esac; \
+    curl -fsSL -o /tmp/trivy.tgz \
+      "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-${TRIVY_ARCH}.tar.gz"; \
+    tar -xzf /tmp/trivy.tgz -C /usr/local/bin trivy; \
+    rm /tmp/trivy.tgz; \
+    /usr/local/bin/trivy --version
 
-# Pipenv
+# （本当に必要な場合のみ）nodejs/npm を入れる
+# RUN apt-get update && apt-get install -y --no-install-recommends nodejs npm && rm -rf /var/lib/apt/lists/*
+
+# Pipenv（必要なら）
 RUN pip install --no-cache-dir pipenv
 
-# 実行環境
 WORKDIR /app
-# スクリプトをコンテナにコピー（ファイル名はあなたの実ファイル名に合わせて）
 COPY app.py /app/app.py
 
-# タイムゾーンとTrivyパス（念のため環境変数でも指定）
 ENV TZ=Asia/Tokyo \
     PYTHONUNBUFFERED=1 \
     TRIVY_PATH=/usr/local/bin/trivy
 
-# 出力ディレクトリ（ボリュームで上書きされてもOK）
-RUN mkdir -p /app/sbom_outputs
+RUN mkdir -p /app/output
 
-# デフォルト実行（引数を渡せば上書き可能）
 CMD ["python", "app.py"]
