@@ -9,7 +9,11 @@ import time
 import argparse
 import shutil
 
-LOG_FILE = "tms.log"
+OUTPUT_DIR = os.path.abspath("output")
+LOG_FILE = os.path.join(OUTPUT_DIR, "app.log")
+
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(message)s",
@@ -18,7 +22,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 CSV_FILE = os.path.abspath("input.csv")
-OUTPUT_DIR = os.path.abspath("sbom_outputs")
 TRIVY_PATH = os.environ.get("TRIVY_PATH") or shutil.which("trivy") or os.path.abspath("trivy.exe")
 
 def get_args():
