@@ -1,3 +1,14 @@
+# syntax=docker/dockerfile:1
+FROM --platform=$BUILDPLATFORM python:3.11-slim
+
+# 基本ツール
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl ca-certificates gnupg unzip \
+ && rm -rf /var/lib/apt/lists/*
+
+# Trivy
+ARG TRIVY_VERSION=0.65.0
+ARG TARGETOS
 ARG TARGETARCH
 RUN set -eux; \
     case "${TARGETARCH}" in \
