@@ -206,6 +206,63 @@ def merge_sbom_files(output_dir: str, merged_file: str) -> None:
     with open(merged_file, "w", encoding="utf-8") as f:
         json.dump(merged_data, f, ensure_ascii=False, indent=2)
 
+def merge_nodejs_sbom_files(output_dir: str, merged_file: str) -> None:
+    """
+    SPDX形式のNode.js SBOMファイルをマージする。
+    'nodejs_'がファイル名に含まれるSBOMのみ対象。
+    'package-lock.json'関連のパッケージ（nameが'package-lock.json'またはパスに含むもの）は除外する。
+    最初のSBOMファイルのメタデータ（spdxVersion, dataLicense, name, documentNamespace, creationInfoなど）は残す。
+    """
+    merged_data = {
+        "spdxVersion": None,
+        "dataLicense": None,
+        "SPDXID": None,
+        "name": None,
+        "documentNamespace": None,
+        "creationInfo": None,
+        "packages": [],
+        "relationships": []
+    }
+    lock_spdxids = set()
+    first_metadata = None
+
+    # nodejs_が付いているファイルのみ対象
+    for filename in os.listdir(output_dir):
+        if filename.startswith("nodejs_") and filename.endswith(".json"):
+            filepath = os.path.join(output_dir, filename)
+            with open(filepath, encoding="utf-8") as f:
+                data = json.load(f)
+            # 最初のSBOMファイルのメタデータを保存
+            if not first_metadata:
+                for key in ["spdxVersion", "dataLicense", "SPDXID", "name", "documentNamespace", "creationInfo"]:
+                    if key in data:
+                        merged_data[key] = data[key]
+                first_metadata = True
+            # package-lock.json関連のSPDXIDを収集
+            for pkg in data.get("packages", []):
+                name = pkg.get("name", "")
+                if name == "package-lock.json" or ("package-lock.json" in name):
+                    lock_spdxids.add(pkg.get("SPDXID"))
+
+    # マージ処理（除外対象を除く）
+    for filename in os.listdir(output_dir):
+        if filename.startswith("nodejs_") and filename.endswith(".json"):
+            filepath = os.path.join(output_dir, filename)
+            with open(filepath, encoding="utf-8") as f:
+                data = json.load(f)
+            merged_data["packages"].extend([
+                pkg for pkg in data.get("packages", [])
+                if pkg.get("SPDXID") not in lock_spdxids
+            ])
+            merged_data["relationships"].extend([
+                rel for rel in data.get("relationships", [])
+                if rel.get("spdxElementId") not in lock_spdxids
+                and rel.get("relatedSpdxElement") not in lock_spdxids
+            ])
+    # マージ結果をファイル出力
+    with open(merged_file, "w", encoding="utf-8") as f:
+        json.dump(merged_data, f, ensure_ascii=False, indent=2)
+
 def main() -> None:
     """
     メイン処理
@@ -233,6 +290,8 @@ def main() -> None:
 
     # PythonパッケージSBOMをマージ
     merge_sbom_files(OUTPUT_DIR, os.path.join(OUTPUT_DIR, "python_packages.json"))
+    # Node.jsパッケージSBOMをマージ
+    merge_nodejs_sbom_files(OUTPUT_DIR, os.path.join(OUTPUT_DIR, "nodejs_packages.json"))
 
     elapsed = time.time() - start_time
     print(f"実行時間: {int(elapsed//60)}分{int(elapsed%60)}秒")
