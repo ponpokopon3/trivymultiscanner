@@ -1,0 +1,19 @@
+
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        TRIVY_VERSION: 0.65.0
+    container_name: trivymultiscanner
+    working_dir: /app
+    volumes:
+      - ./output:/app/output
+    environment:
+      - TZ=Asia/Tokyo
+      - PYTHONUNBUFFERED=1
+      - TRIVY_PATH=/usr/local/bin/trivy
+    command: ["python", "app.py","--debug"]
