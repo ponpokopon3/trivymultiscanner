@@ -221,7 +221,7 @@ def merge_sbom_files(output_dir: str, merged_file: str) -> None:
 
     # python_が付いているファイルのみ対象
     for filename in os.listdir(output_dir):
-        if filename.startswith("python_") and filename.endswith(".json"):
+        if ("_python_") in filename and filename.endswith(".json"):
             filepath = os.path.join(output_dir, filename)
             with open(filepath, encoding="utf-8") as f:
                 data = json.load(f)
@@ -239,7 +239,7 @@ def merge_sbom_files(output_dir: str, merged_file: str) -> None:
 
     # マージ処理（除外対象を除く）
     for filename in os.listdir(output_dir):
-        if filename.startswith("merge_python_") and filename.endswith(".json"):
+        if ("_python_") in filename and filename.endswith(".json"):
             filepath = os.path.join(output_dir, filename)
             with open(filepath, encoding="utf-8") as f:
                 data = json.load(f)
@@ -278,7 +278,7 @@ def merge_nodejs_sbom_files(output_dir: str, merged_file: str) -> None:
 
     # nodejs_が付いているファイルのみ対象
     for filename in os.listdir(output_dir):
-        if filename.startswith("merge_nodejs_") and filename.endswith(".json"):
+        if ("_nodejs_") in filename and filename.endswith(".json"):
             filepath = os.path.join(output_dir, filename)
             with open(filepath, encoding="utf-8") as f:
                 data = json.load(f)
@@ -296,7 +296,7 @@ def merge_nodejs_sbom_files(output_dir: str, merged_file: str) -> None:
 
     # マージ処理（除外対象を除く）
     for filename in os.listdir(output_dir):
-        if filename.startswith("nodejs_") and filename.endswith(".json"):
+        if ("_nodejs_") in filename and filename.endswith(".json"):
             filepath = os.path.join(output_dir, filename)
             with open(filepath, encoding="utf-8") as f:
                 data = json.load(f)
@@ -335,7 +335,7 @@ def merge_java_sbom_files(output_dir: str, merged_file: str) -> None:
 
     # java_が付いているファイルのみ対象
     for filename in os.listdir(output_dir):
-        if filename.startswith("merge_java_") and filename.endswith(".json"):
+        if ("_java_") in filename and filename.endswith(".json"):
             filepath = os.path.join(output_dir, filename)
             with open(filepath, encoding="utf-8") as f:
                 data = json.load(f)
@@ -353,7 +353,7 @@ def merge_java_sbom_files(output_dir: str, merged_file: str) -> None:
 
     # マージ処理（除外対象を除く）
     for filename in os.listdir(output_dir):
-        if filename.startswith("java_") and filename.endswith(".json"):
+        if ("_java_") in filename and filename.endswith(".json"):
             filepath = os.path.join(output_dir, filename)
             with open(filepath, encoding="utf-8") as f:
                 data = json.load(f)
