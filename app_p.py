@@ -85,20 +85,6 @@ def create_nodejs_sbom(idx: str, name: str, version: str) -> None:
             with open(output_path, "w", encoding="utf-8") as f:
                 json.dump(sbom, f, ensure_ascii=False, indent=2)
 
-            # npm ls --all --json の依存関係をSBOMにマッピング
-            npm_ls_path = os.path.join(tmpdir, "npm_ls.json")
-            # npm ls --all --json の結果をファイルに保存
-            with open(npm_ls_path, "w", encoding="utf-8") as f:
-                subprocess.run(
-                    ["npm", "ls", "--all", "--json"],
-                    cwd=tmpdir,
-                    stdout=f,
-                    stderr=subprocess.DEVNULL,
-                    check=True
-                )
-            # 依存関係をSBOMに反映
-            map_npm_ls_to_sbom(output_path, npm_ls_path)
-
         except subprocess.CalledProcessError as e:
             logger.error(f"✖ Failed to generate Node.js SBOM for {name}@{version}: {e}")
 
