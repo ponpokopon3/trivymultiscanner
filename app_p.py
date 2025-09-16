@@ -54,7 +54,7 @@ def create_nodejs_sbom(idx: str, name: str, version: str) -> None:
     Node.jsパッケージのSBOM（SPDX形式）を生成
     出力ファイル名は「00001_nodejs_express_4.18.2.json」など、idxを5桁ゼロ埋めで文頭に付与
     """
-    file_name = f"{idx.zfill(5)}_nodejs_{name}_{version}.json"
+    file_name = f"定期調査__Nodejs_{idx.zfill(5)}_nodejs_{name}@{version}.json"
     output_path = os.path.join(OUTPUT_DIR, file_name)
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
@@ -93,7 +93,7 @@ def create_python_sbom(idx: str, name: str, version: str) -> None:
     PythonパッケージのSBOM（SPDX形式）を生成
     出力ファイル名は「00001_python_pyarrow_19.0.0.json」など、idxを5桁ゼロ埋めで文頭に付与
     """
-    file_name = f"{idx.zfill(5)}_python_{name}_{version}.json"
+    file_name = f"定期調査__Python_{idx.zfill(5)}_python_{name}@{version}.json"
     output_path = os.path.join(OUTPUT_DIR, file_name)
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
@@ -162,7 +162,7 @@ def create_java_sbom(idx: str, name: str, version: str, url: str) -> None:
     JavaパッケージのSBOM（SPDX形式）を生成
     出力ファイル名は「00001_java_{パッケージ名}_{バージョン}.json」
     """
-    file_name = f"{idx.zfill(5)}_java_{name}_{version}.json"
+    file_name = f"定期調査__Java_{idx.zfill(5)}_java_{name}@{version}.json"
     output_path = os.path.join(OUTPUT_DIR, file_name)
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
