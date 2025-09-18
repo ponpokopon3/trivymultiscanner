@@ -51,7 +51,7 @@ def _run(cmd, *, cwd=None, env=None):
 
 def create_nodejs_sbom(idx: str, name: str, version: str) -> None:
     safe_name = name.replace("/", "_")
-    file_name = f"定期調査__Nodejs_{idx.zfill(5)}_nodejs_{safe_name}@{version}.json"
+    file_name = f"定期調査__Nodejs__{idx.zfill(5)}_nodejs_{safe_name}@{version}.json"
     output_path = os.path.join(OUTPUT_DIR, file_name)
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
@@ -87,7 +87,7 @@ def create_nodejs_sbom(idx: str, name: str, version: str) -> None:
 
 def create_python_sbom(idx: str, name: str, version: str) -> None:
     safe_name = name.replace("/", "_")
-    file_name = f"定期調査__Python_{idx.zfill(5)}_python_{safe_name}@{version}.json"
+    file_name = f"定期調査__Python__{idx.zfill(5)}_python_{safe_name}@{version}.json"
     output_path = os.path.join(OUTPUT_DIR, file_name)
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
@@ -153,7 +153,7 @@ def create_python_sbom(idx: str, name: str, version: str) -> None:
 
 def create_java_sbom(idx: str, name: str, version: str, url: str) -> None:
     safe_name = name.replace("/", "_")
-    file_name = f"定期調査__Java_{idx.zfill(5)}_java_{safe_name}@{version}.json"
+    file_name = f"定期調査__Java__{idx.zfill(5)}_java_{safe_name}@{version}.json"
     output_path = os.path.join(OUTPUT_DIR, file_name)
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
