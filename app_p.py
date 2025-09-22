@@ -159,19 +159,31 @@ def create_java_sbom(idx: str, name: str, version: str, url: str) -> None:
 
     with tempfile.TemporaryDirectory() as tmpdir:
         try:
-            # jarファイル名を決定
             jar_file = os.path.join(tmpdir, f"{name}-{version}.jar")
-            # ダウンロード（curl/wgetどちらでも可）
             _run(["curl", "-L", "-o", jar_file, url])
-            # TrivyでSBOM出力（rootfsスキャン）
+            if not os.path.exists(jar_file) or os.path.getsize(jar_file) == 0:
+                raise FileNotFoundError(f"Downloaded jar file does not exist or is empty: {jar_file}")
             trivy_cmd = [
                 TRIVY_PATH, "rootfs", tmpdir,
                 "--format", "spdx-json",
                 "--output", output_path,
             ]
             _run(trivy_cmd, cwd=tmpdir)
+            # "Filesystem"が含まれるパッケージを除外
+            with open(output_path, encoding="utf-8") as f:
+                sbom = json.load(f)
+            filtered_packages = [
+                pkg for pkg in sbom.get("packages", [])
+                if not ("Filesystem" in str(pkg.get("SPDXID", "")))
+            ]
+            sbom["packages"] = filtered_packages
+            # filesキーを削除
+            if "files" in sbom:
+                del sbom["files"]
+            with open(output_path, "w", encoding="utf-8") as f:
+                json.dump(sbom, f, ensure_ascii=False, indent=2)
             logger.info(f"✔ Java SBOM saved: {output_path}")
-        except subprocess.CalledProcessError as e:
+        except (subprocess.CalledProcessError, FileNotFoundError) as e:
             logger.error(f"✖ Failed to generate Java SBOM for {name}@{version}: {e}")
 
 def create_individual_sbom(idx: str, language: str, name: str, version: str, url: str = None) -> None:
@@ -407,48 +419,6 @@ def map_pipenv_graph_to_sbom(sbom_file: str, pipenv_graph_file: str) -> None:
                     "relatedSpdxElement": child_spdxid,
                     "relationshipType": "DEPENDS_ON"
                 })
-    sbom["relationships"] = relationships
-
-    # 上書き保存
-    with open(sbom_file, "w", encoding="utf-8") as f:
-        json.dump(sbom, f, ensure_ascii=False, indent=2)
-
-def map_npm_ls_to_sbom(sbom_file: str, npm_ls_file: str) -> None:
-    """
-    npm ls --all --json の依存関係情報をSBOMのrelationshipsにマッピングする
-    """
-    # SBOM読み込み
-    with open(sbom_file, encoding="utf-8") as f:
-        sbom = json.load(f)
-
-    # npm ls --all --json 読み込み
-    with open(npm_ls_file, encoding="utf-8") as f:
-        npm_tree = json.load(f)
-
-    # パッケージ名→SPDXIDの辞書を作成
-    name_to_spdxid = {pkg["name"]: pkg["SPDXID"] for pkg in sbom.get("packages", []) if "SPDXID" in pkg and "name" in pkg}
-
-    relationships = sbom.get("relationships", [])
-
-    def walk_dependencies(parent_name, deps):
-        parent_spdxid = name_to_spdxid.get(parent_name)
-        if not parent_spdxid or not deps:
-            return
-        for child_name, child_info in deps.items():
-            child_spdxid = name_to_spdxid.get(child_name)
-            if child_spdxid:
-                relationships.append({
-                    "spdxElementId": parent_spdxid,
-                    "relatedSpdxElement": child_spdxid,
-                    "relationshipType": "DEPENDS_ON"
-                })
-            # 再帰的に子の依存も辿る
-            walk_dependencies(child_name, child_info.get("dependencies", {}))
-
-    # ルートパッケージから依存関係を辿る
-    root_name = npm_tree.get("name")
-    walk_dependencies(root_name, npm_tree.get("dependencies", {}))
-
     sbom["relationships"] = relationships
 
     # 上書き保存
